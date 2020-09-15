@@ -1,0 +1,55 @@
+VPC Networking
+
+Task 1. Explore the default network
+ No Code
+
+After deleting its not possible to create a VM instance
+
+Task 2. Create an auto mode network
+Create an auto mode VPC network with firewall rules
+
+gcloud compute networks create mynetwork --project=qwiklabs-gcp-00-8af514d22fe1 --subnet-mode=auto --bgp-routing-mode=regional
+
+gcloud compute firewall-rules create mynetwork-allow-icmp --project=qwiklabs-gcp-00-8af514d22fe1 --network=projects/qwiklabs-gcp-00-8af514d22fe1/global/networks/mynetwork --description=Allows\ ICMP\ connections\ from\ any\ source\ to\ any\ instance\ on\ the\ network. --direction=INGRESS --priority=65534 --source-ranges=0.0.0.0/0 --action=ALLOW --rules=icmp
+
+gcloud compute firewall-rules create mynetwork-allow-internal --project=qwiklabs-gcp-00-8af514d22fe1 --network=projects/qwiklabs-gcp-00-8af514d22fe1/global/networks/mynetwork --description=Allows\ connections\ from\ any\ source\ in\ the\ network\ IP\ range\ to\ any\ instance\ on\ the\ network\ using\ all\ protocols. --direction=INGRESS --priority=65534 --source-ranges=10.128.0.0/9 --action=ALLOW --rules=all
+
+gcloud compute firewall-rules create mynetwork-allow-rdp --project=qwiklabs-gcp-00-8af514d22fe1 --network=projects/qwiklabs-gcp-00-8af514d22fe1/global/networks/mynetwork --description=Allows\ RDP\ connections\ from\ any\ source\ to\ any\ instance\ on\ the\ network\ using\ port\ 3389. --direction=INGRESS --priority=65534 --source-ranges=0.0.0.0/0 --action=ALLOW --rules=tcp:3389
+
+gcloud compute firewall-rules create mynetwork-allow-ssh --project=qwiklabs-gcp-00-8af514d22fe1 --network=projects/qwiklabs-gcp-00-8af514d22fe1/global/networks/mynetwork --description=Allows\ TCP\ connections\ from\ any\ source\ to\ any\ instance\ on\ the\ network\ using\ port\ 22. --direction=INGRESS --priority=65534 --source-ranges=0.0.0.0/0 --action=ALLOW --rules=tcp:22
+
+
+Create a VM instance in us-central1
+
+create vm instance when vcp network is created
+
+gcloud beta compute --project=qwiklabs-gcp-00-8af514d22fe1 instances create mynet-us-vm --zone=us-central1-c --machine-type=n1-standard-1 --subnet=mynetwork --network-tier=PREMIUM --maintenance-policy=MIGRATE --service-account=667892035096-compute@developer.gserviceaccount.com --scopes=https://www.googleapis.com/auth/devstorage.read_only,https://www.googleapis.com/auth/logging.write,https://www.googleapis.com/auth/monitoring.write,https://www.googleapis.com/auth/servicecontrol,https://www.googleapis.com/auth/service.management.readonly,https://www.googleapis.com/auth/trace.append --image=debian-10-buster-v20200910 --image-project=debian-cloud --boot-disk-size=10GB --boot-disk-type=pd-standard --boot-disk-device-name=mynet-us-vm --no-shielded-secure-boot --no-shielded-vtpm --no-shielded-integrity-monitoring --reservation-affinity=any
+
+Create a VM instance in europe-west1
+
+gcloud beta compute --project=qwiklabs-gcp-00-8af514d22fe1 instances create mynet-eu-vm --zone=europe-west1-c --machine-type=n1-standard-1 --subnet=mynetwork --network-tier=PREMIUM --maintenance-policy=MIGRATE --service-account=667892035096-compute@developer.gserviceaccount.com --scopes=https://www.googleapis.com/auth/devstorage.read_only,https://www.googleapis.com/auth/logging.write,https://www.googleapis.com/auth/monitoring.write,https://www.googleapis.com/auth/servicecontrol,https://www.googleapis.com/auth/service.management.readonly,https://www.googleapis.com/auth/trace.append --image=debian-10-buster-v20200910 --image-project=debian-cloud --boot-disk-size=10GB --boot-disk-type=pd-standard --boot-disk-device-name=mynet-eu-vm --no-shielded-secure-boot --no-shielded-vtpm --no-shielded-integrity-monitoring --reservation-affinity=any
+
+
+Verify connectivity for the VM instances
+internal ip		external ip
+10.132.0.2 (nic0)	34.77.147.12
+
+Verify connectivity for the VM instances
+No Code
+
+
+Create custom mode networks
+
+Create the managementnet network
+Create the managementnet network using the Cloud Console.
+
+These commands illustrate that networks and subnets can be created using the gcloud command line.
+gcloud compute networks create managementnet --project=qwiklabs-gcp-00-8af514d22fe1 --subnet-mode=custom --bgp-routing-mode=regional
+
+gcloud compute networks subnets create managementsubnet-us --project=qwiklabs-gcp-00-8af514d22fe1 --range=10.130.0.0/20 --network=managementnet --region=us-central1
+
+Create the firewall rules for managementnet
+
+gcloud compute --project=qwiklabs-gcp-00-8af514d22fe1 firewall-rules create managementnet-allow-icmp-ssh-rdp --direction=INGRESS --priority=1000 --network=managementnet --action=ALLOW --rules=tcp:22,tcp:33-89,icmp --source-ranges=0.0.0.0/0
+
+Create the managementnet-us-vm instance
